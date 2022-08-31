@@ -18,6 +18,8 @@ namespace Business.Constants
         public static string CategoryListed = "Kategoriler listelendi";
         public static string CustomersListed = "Müşteriler listelendi";
         public static string CustomerNotFound = "Müşteri bulunamadı";
-
+        public static string ProductCountOfCategoryError = "Kategoriye daha fazla urun eklenemez";
+        public static string ProductNameAlreadyExists = "Bu urun ismi onceden kullanilmistir";
+        public static string CategoryLimitExceeded = "Urun siniri asildi";
     }
 }

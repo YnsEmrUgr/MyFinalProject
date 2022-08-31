@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
 using Core.CrossCuttingConcerns.Validation;
+using Core.Utilities.Business;
 using FluentValidation;
 using ValidationException = FluentValidation.ValidationException;
 
@@ -22,19 +23,35 @@ namespace Business.Concrete
     {
 
         IProductDal _productDal;
-        public ProductManager(IProductDal productDal)
+        ICategoryService _categoryService;
+        public ProductManager(IProductDal productDal, ICategoryService categoryService)
         {
             _productDal = productDal;
+            _categoryService = categoryService;
         }
+
+
+        //-----------------------------------------------------------------------------------------------
 
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
-            //Business Codes
-
+            var result = BusinessRules.Run
+                (
+                CheckIfProductCountOfCategoryCorrect(product.CategoryId),
+                CheckIfProductNameExists(product.ProductName),
+                CheckIfCategoryLimitExceeded()
+                );
+            if (result != null)
+            {
+                return result;
+            }
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
         }
+
+
+        //-----------------------------------------------------------------------------------------------
 
         public IDataResult<List<Product>> GetAll()
         {
@@ -80,12 +97,48 @@ namespace Business.Concrete
         {
 
             var result = _productDal.GetProductDetails();
-            if (result==null)
+            if (result == null)
             {
-               return new ErrorDataResult<List<ProductDetailDto>>(Messages.ProductNotFound);
+                return new ErrorDataResult<List<ProductDetailDto>>(Messages.ProductNotFound);
             }
 
             return new SuccessDataResult<List<ProductDetailDto>>(result);
+        }
+
+
+        //-----------------------------------------*************************************-----------------------------------
+
+
+        private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
+        {
+            var result = _productDal.GetAll(p => p.CategoryId == categoryId).Count();
+            if (result >= 15)
+            {
+                return new ErrorResult(Messages.ProductCountOfCategoryError);
+            }
+
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfProductNameExists(string productName)
+        {
+            var result = _productDal.GetAll(p => p.ProductName == productName).Any();
+            if (result)
+            {
+                return new ErrorResult(Messages.ProductNameAlreadyExists);
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfCategoryLimitExceeded()
+        {
+            var result = _categoryService.GetAll();
+            if (result.Data.Count() > 15)
+            {
+                return new ErrorResult(Messages.CategoryLimitExceeded);
+            }
+
+            return new SuccessResult();
         }
     }
 }

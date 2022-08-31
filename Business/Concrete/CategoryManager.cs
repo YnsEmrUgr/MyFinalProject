@@ -22,13 +22,13 @@ namespace Business.Concrete
 
         public IDataResult<List<Category>> GetAll()
         {
-            return new SuccessDataResult<List<Category>>(_categoryDal.GetAll(),Messages.CategoryListed) ;
+            return new SuccessDataResult<List<Category>>(_categoryDal.GetAll(), Messages.CategoryListed);
         }
 
 
         public IDataResult<Category> GetById(int id)
         {
-            return new SuccessDataResult<Category>(_categoryDal.Get(p => p.CategoryId == id),Messages.CategoryListed);
+            return new SuccessDataResult<Category>(_categoryDal.Get(p => p.CategoryId == id), Messages.CategoryListed);
         }
     }
 }
